@@ -1,0 +1,48 @@
+image: php:7.4
+
+variables:
+  DATABASE_URL: $DATABASE_URL
+  DATABASE_NAME: $DATABASE_NAME
+  DATABASE_USER: $DATABASE_USER
+  DATABASE_PASSWORD: $DATABASE_PASSWORD
+  DATABASE_ROOT_PASSWORD: $DATABASE_ROOT_PASSWORD
+
+cache:
+    paths:
+      - sources/vendor/
+
+before_script:
+  - apt update -y
+  - pecl install xdebug
+  - docker-php-ext-enable xdebug
+  - apt install -y libzip-dev zip
+  - docker-php-ext-install pdo pdo_mysql zip
+  - curl -sS https://getcomposer.org/installer | php
+  - mv composer.phar /usr/local/bin/composer
+
+services :
+  - mysql:latest
+
+stages:
+  - build
+  - test
+  - linter
+
+build:
+  stage: build
+  script:
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress -d sources
+
+unit-test:
+  stage: test
+  script:
+    - php sources/bin/phpunit -c sources/phpunit.xml.dist --coverage-text --colors=never
+  dependencies:
+      - build
+
+linter:
+  stage: linter
+  script:
+    - sources/vendor/bin/phpcs -n --standard=sources/phpcs.xml.dist # -n pour eviter de bloquer sur les warnings (uniquement les erreurs)
+  dependencies:
+      - build
