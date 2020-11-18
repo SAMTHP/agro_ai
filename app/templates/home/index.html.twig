@@ -104,6 +104,12 @@
             height: 120px;
             border-radius: 50%;
         }
+
+        @media screen and (max-width: 450px) {
+            #spanConcept {
+                font-size: 12px;
+            }
+        }
     </style>
 {% endblock %}
 
@@ -160,6 +166,32 @@
             <div class="row">
                 <div class="col-lg-4 ml-auto"><p class="lead">Freelancer is a free bootstrap theme created by Start Bootstrap. The download includes the complete source files including HTML, CSS, and JavaScript as well as optional SASS stylesheets for easy customization.</p></div>
                 <div class="col-lg-4 mr-auto"><p class="lead">You can create your own custom avatar for the masthead, change the icon in the dividers, and add your email address to the contact form to make it fully functional!</p></div>
+            </div>
+            <div class="d-flex justify-content-between text-white mt-2">
+                <div class="col-lg-3 card bg-primary shadow border-0 p-3">
+                    <div class="d-flex justify-content-center">
+                        <i class="fad fa-lightbulb-on fa-3x"></i>
+                    </div>
+                    <div class="d-flex justify-content-center font-weight-bold mt-3">
+                        <span class="text-center" id="spanConcept">Réflexion</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 card bg-secondary shadow border-0 p-3">
+                    <div class="d-flex justify-content-center">
+                        <i class="fad fa-abacus fa-3x"></i>
+                    </div>
+                    <div class="d-flex justify-content-center font-weight-bold mt-3">
+                        <span class="text-center" id="spanConcept">Intelligence articielle</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 card bg-info shadow border-0 p-3">
+                    <div class="d-flex justify-content-center">
+                        <i class="fad fa-users-class fa-3x"></i>
+                    </div>
+                    <div class="d-flex justify-content-center font-weight-bold mt-3">
+                        <span class="text-center" id="spanConcept">Collaboration</span>
+                    </div>
+                </div>
             </div>
             <!-- About Section Button-->
             <div class="text-center mt-4">
@@ -269,7 +301,7 @@
                                 <div class="card">
                                     <div class="card-body text-center">
                                         <p><img class=" img-fluid" src="/home/assets/img/group_1.svg" alt="card image"></p>
-                                        <h4 class="card-title">Les as de la bonne potion</h4>
+                                        <h4 class="card-title">Les enchanteurs</h4>
                                         <p class="card-text">This is basic card with image on top, title, description and button.</p>
                                         <a href="https://www.fiverr.com/share/qb8D02" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i></a>
                                     </div>
