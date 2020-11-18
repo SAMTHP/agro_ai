@@ -316,6 +316,7 @@
                             </div>
                             <div class="card-body">
                                 {# Graph ici #}
+                                
                                 <h3 id="waiting-msg">Waiting for server...</h3>
                                 <p>
                                 <span style="font-size:16px" id="trainingStatus"></span>
@@ -377,5 +378,56 @@
 {% endblock %}
 
 {% block javascripts %}
-    
+    <script src="https://cdn.rawgit.com/BrainJS/brain.js/45ce6ffc/browser.js"></script>
+    <script>
+        let cityPlantDatas = $.ajax({
+            url : '/get-city-plant-datas', // La ressource ciblée
+            type : 'GET',
+            dataType : "json",
+            async: false
+        }).responseJSON;
+        console.log(cityPlantDatas)
+
+        const trainingData = [];
+
+        for (let element in cityPlantDatas) {
+            const season           = cityPlantDatas[element]["season"];
+            const city             = cityPlantDatas[element]["city"];
+            const cityPopulation   = cityPlantDatas[element]["cityPopulation"];
+            const plant            = cityPlantDatas[element]["plant"];
+            const year             = cityPlantDatas[element]["year"];
+            const quantitySold     = cityPlantDatas[element]["quantitySold"];
+            const quantityProduced = cityPlantDatas[element]["quantityProduced"];
+            
+            trainingData.push({
+                input: { 
+                    [season]: 1,
+                    [city]: 1,
+                    [cityPopulation]: 1,
+                    [plant]: 1,
+                    [year]: 1
+                },
+                output: { [quantityProduced]: 1 }
+            });
+        }
+
+        const net   = new brain.NeuralNetwork({ hiddenLayers: [3] });
+        const stats = net.train(trainingData);
+
+        console.log(stats);
+
+        let outputs         = net.run({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
+        let numeratorSize   = 0;
+        let denominatorSize = 0;
+
+        for (const [key, value] of Object.entries(outputs)) {
+            numeratorSize    += key * value;
+            denominatorSize  += value;
+        }
+
+        let average = numeratorSize / denominatorSize;
+
+        console.log(average)
+
+    </script>
 {% endblock %}
