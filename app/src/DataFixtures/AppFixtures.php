@@ -12,6 +12,7 @@ use App\Entity\Season;
 use App\Entity\UserRole;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AppFixtures extends Fixture
@@ -41,7 +42,7 @@ class AppFixtures extends Fixture
 
         $manager->persist($user);
 
-        $arrayPlant = ["Marijuana", "Carrotte de luxe", "Aubergine", "Pomme", "Poire", "Oignons", "Thym", "Poivrons", "Cerise", "Kiwi"];
+        $arrayPlant = ["Marie-Jeanne", "CBD", "Carotte de luxe", "Aubergine", "Pomme", "Poire", "Oignons", "Thym", "Poivrons", "Cerise", "Kiwi"];
         $arrayPlantObject = [];
         foreach ($arrayPlant as $plantName) {
             # code...
@@ -53,14 +54,10 @@ class AppFixtures extends Fixture
 
         $arrayClimat = [
             "tropical",
-            "aride",
             "tempéré",
             "froid",
-            "polaire",
-            "tropicaux humides",
-            "désertiques",
-            "subtropicaux",
             "méditerranéen",
+            "littoral",
             "continental"
         ];
 
@@ -75,38 +72,51 @@ class AppFixtures extends Fixture
             "Saint-Jean du doigt",
             "Bourseul",
             "La Couyère",
+            "Paris",
+            "Lyon",
+            "Reims",
+            "Rouen",
+            "Toulouse",
+            "Toulon",
+            "Nice",
+            "Nimes",
+            "Brest",
+            "Lille",
+            "Annecy",
+            "Prades",
+            "Orlean",
+            "Dijon",
+            "Strasbourg",
+            "Avignon",
+            "Chartres",
+            "Poitier",
+            "Chambery",
+            "Perigueux",
             "Néant-sur-Yvel"
         ];
 
-
         $arrayCityObject = [];
-
         foreach ($arrayCity as $cityName) {
             $city = new City();
             $city->setLocalityName($cityName)
-                 ->setPopulation(rand(2000,12000));
-            
+                 ->setPopulation(rand(12000,120000));
             array_push($arrayCityObject, $city);
-
             $manager->persist($city);
         }
+        // dd($arrayPlantObject);
 
         $arrayClimatObject = [];
-
         foreach ($arrayClimat as $labelClimat) {
-            # code...
-            $counter = rand(2, 8);
+            $counter = rand(1, 3);
             $climat = new Climat();
             $climat->setLabel($labelClimat);
             array_push($arrayClimatObject, $climat);
-
             for($i = 0; $i < $counter; $i++){
-                $climat->addPlant(
+                $climat->addPlant(//check (itself) for no duplicity 
                     $arrayPlantObject[rand(0, count( $arrayPlantObject) - 1 )]
                 );
                 $manager->persist($plant);
             }
-
             $manager->persist($climat);
         }
 
@@ -114,19 +124,16 @@ class AppFixtures extends Fixture
             $city->setClimat(
                 $arrayClimatObject[rand(0, count( $arrayClimatObject) - 1 )]
             );
-
             $manager->persist($climat);
         }
-
+        
+        $arraySeasonObject= [];
         $arraySeason = [
             "hiver",
             "printemps",
             "été",
             "automne"
         ];
-
-        $arraySeasonObject= [];
-
         foreach ($arraySeason as $seasonName) {
             $season = new Season();
             $season->setName($seasonName);
@@ -134,20 +141,42 @@ class AppFixtures extends Fixture
             $manager->persist($season);
         }
 
+    $arrayOfPopPerYearAndCity = [];
+        
         for($year = 2010; $year <= 2020; $year++){
-            $currentYear = new \DateTime("$year-12-30");
+            $currentYear = new \DateTime("$year-01-01");
+            
             foreach ($arraySeasonObject as $season) {
                 foreach ($arrayCityObject as $city) {
+
+                    $lastPop = isset($arrayOfPopPerYearAndCity[$city->getLocalityName()][$year-1]) ? $arrayOfPopPerYearAndCity[$city->getLocalityName()][$year-1] : $city->getPopulation();
+                    $arrayOfPopPerYearAndCity[$city->getLocalityName()][$year] = $this->generateNewPopulation($lastPop);
+                    // modifie légèrement la population d'une ville dans le temps
                     foreach ($arrayPlantObject as $plant) {
-                        $randomQuantitySold = rand(1.0, 5.0) * $city->getPopulation();
-                        $randomQuantityProduced = rand($randomQuantitySold, $randomQuantitySold * 1.25);
+
+                        $climatModifier = $this->getClimatImpact(
+                            $plant->getClimats(),
+                            $city->getClimat()->getLabel()
+                        );
+
+                        $seasonModifier = $this->getSeasonImpact($season->getName());
+
+                        $randomSold = $this->getRandomSold(
+                            $arrayOfPopPerYearAndCity[$city->getLocalityName()][$year],
+                            $climatModifier,
+                            $seasonModifier
+                        );
+
+                        $isProducedMoreImportant = rand(1,10);
+                        $randomProduced = $isProducedMoreImportant < 6 ? rand($randomSold, $randomSold * 1.33) : $randomSold;
                         $cityPlant = new CityPlant();
-                        $cityPlant->setQuantityProducedInKg($randomQuantityProduced)
-                                  ->setQuantitySoldInKg($randomQuantitySold)
+                        $cityPlant->setQuantityProducedInKg($randomProduced)
+                                  ->setQuantitySoldInKg($randomSold)
                                   ->setSeason($season)
                                   ->setCity($city)
                                   ->setPlant($plant)
-                                  ->setYear($currentYear);
+                                  ->setYear($currentYear)
+                                  ->setPopulation($arrayOfPopPerYearAndCity[$city->getLocalityName()][$year]);
                         
                         $manager->persist($cityPlant);
                     }
@@ -156,5 +185,45 @@ class AppFixtures extends Fixture
         }
 
         $manager->flush();
+    }
+
+    /**
+     * Modifie légèrement la population d'une ville dans le temps
+     *
+     * @param integer $population
+     * @return integer new population
+     */
+    public function generateNewPopulation($population): int
+    {
+        $isNewPopMoreImportant = rand(1,10);
+        $population = $isNewPopMoreImportant >= 5 ? $population * 1.15 : $population;
+        $population = $isNewPopMoreImportant <= 2 ? $population / 1.10 : $population;
+        return $population;
+    }
+
+    private function getRandomSold(int $population, float $climatModifier, float $seasonModifier): float
+    {
+        return rand(1.0, 3.0) * $population * $climatModifier * $seasonModifier;
+    }
+
+    private function getClimatImpact(ArrayCollection $climatPlants, string $climatCity): float
+    {
+        $climatModifier = 1.0;
+        foreach ($climatPlants as $climatPlant) {
+            // echo $climatModifier;
+            $climatModifier = $climatPlant->getLabel() === $climatCity ? 1.30 : 1.0;
+            // dd($climatModifier);
+        }
+        return $climatModifier; 
+    }
+
+    private function getSeasonImpact(string $season): float
+    {
+        $seasonModifier = 1;
+        $seasonModifier = $season === "hiver"? 1 : 2;
+        $seasonModifier = $season === "printemps"? 2.5 : 1;
+        $seasonModifier = $season === "automne"? 1.8 : 1;
+        $seasonModifier = $season === "été"? 3 : $seasonModifier;
+        return $seasonModifier;
     }
 }

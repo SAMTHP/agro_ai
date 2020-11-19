@@ -47,4 +47,13 @@ class CityPlantRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getDatas()
+    {
+        return $this->createQueryBuilder('c')
+            ->setMaxResults(100)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 }

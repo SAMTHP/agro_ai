@@ -92,6 +92,7 @@ class Climat
     {
         if (!$this->plants->contains($plant)) {
             $this->plants[] = $plant;
+            $plant->addClimat($this);
         }
 
         return $this;

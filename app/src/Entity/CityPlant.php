@@ -50,6 +50,11 @@ class CityPlant
      */
     private $quantityProduced;
 
+    /**
+     * @ORM\Column(type="float")
+     */
+    private $population;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -147,6 +152,18 @@ class CityPlant
     public function setQuantityProducedInKg(?float $quantityProduced): self
     {
         $this->quantityProduced = $quantityProduced * 1000;
+
+        return $this;
+    }
+
+    public function getPopulation(): ?float
+    {
+        return $this->population;
+    }
+
+    public function setPopulation(float $population): self
+    {
+        $this->population = $population;
 
         return $this;
     }

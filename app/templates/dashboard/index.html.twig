@@ -311,13 +311,64 @@
                     <div class="col-md-8">
                         <div class="card card-chart">
                             <div class="card-header">
-                                <h5 class="card-title">Test</h5>
-                                <p class="card-category">Line Chart with Points</p>
+                                <h5 class="card-title text-center">Prévoir sa production</h5>
+                                <p class="card-category text-center">Line Chart with Points</p>
                             </div>
                             <div class="card-body">
                                 {# Graph ici #}
                                 
-                                <h3 id="waiting-msg">Waiting for server...</h3>
+                                <div class="row d-flex justify-content-center">
+                                    <div class="col-lg-6">
+                                        <form id="generatePrediction" class="shadow p-3 card border-0">
+                                            <h6 class="waiting-msg text-muted text-center mt-2">Formulaires</h6>
+                                            <div class="form-group">
+                                                <label for="exampleFormControlSelect1">Ville</label>
+                                                <select class="form-control" id="cityInput">
+                                                    {% for city in cities %}
+                                                        <option value="{{ city.localityName }}">{{ city.localityName }}</option>
+                                                    {% endfor %}
+                                                    {% for city in cities %}
+                                                        <input type="hidden" name="" id="{{ city.localityName }}-population" value={{ city.population }}>
+                                                        <input type="hidden" name="" id="{{ city.localityName }}-climat" value={{ city.climat.label }}>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="exampleFormControlSelect1">Plante</label>
+                                                <select class="form-control" id="plantInput">
+                                                    {% for plant in plants %}
+                                                        <option value="{{ plant.name }}">{{ plant.name }}</option>
+                                                    {% endfor %}
+                                                    {# {% for plant in plants %}
+                                                        <input type="hidden" name="" id="{{ plant.name }}-climatp" value={{ plant.climats|json_encode }}>
+                                                    {% endfor %} #}
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="exampleFormControlSelect1">Années</label>
+                                                <select class="form-control" id="yearInput">
+                                                    <option value="2021-01-01T00:00:00+00:00">2021</option>
+                                                    <option value="2022-01-01T00:00:00+00:00">2022</option>
+                                                    <option value="2023-01-01T00:00:00+00:00">2023</option>
+                                                </select>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="col-lg-6" style="diplay: none" id="spinnerIa">
+                                        <div class="d-flex justify-content-center">
+                                            <div class="card border-0 shadow col-12" >
+                                                <h6 class="waiting-msg text-muted text-center mt-4">Prévision en cours</h6>
+                                                <div class="d-flex justify-content-center mb-3">
+                                                    <div id="contentPrevision"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <button class=" btn btn-block btn-lg btn-info shadow" id="generateProductionBtn">Générer prévision</button>
+                                </div>
                                 <p>
                                 <span style="font-size:16px" id="trainingStatus"></span>
                                 <p>
@@ -326,17 +377,6 @@
                                 <button style="font-size:18px;padding:5px;margin-right:10px" id="predict-button">Predict Pitch</button><p>
                                 Predicted Pitch Type: <span style="font-weight:bold" id="predictResult"></span>
                                 </div>
-                                <script src="dist/bundle.js"></script>
-                                <style>
-                                html,
-                                body {
-                                    font-family: Roboto, sans-serif;
-                                    color: #5f6368;
-                                }
-                                body {
-                                    background-color: rgb(248, 249, 250);
-                                }
-                                </style>
                                 
                             </div>
                             <div class="card-footer">
@@ -353,6 +393,7 @@
                     </div>
                 </div>
             </div>
+            
             <footer class="footer footer-black  footer-white ">
                 <div class="container-fluid">
                     <div class="row">
@@ -380,54 +421,280 @@
 {% block javascripts %}
     <script src="https://cdn.rawgit.com/BrainJS/brain.js/45ce6ffc/browser.js"></script>
     <script>
-        let cityPlantDatas = $.ajax({
-            url : '/get-city-plant-datas', // La ressource ciblée
-            type : 'GET',
-            dataType : "json",
-            async: false
-        }).responseJSON;
-        console.log(cityPlantDatas)
+        // let cityPlantDatas = $.ajax({
+        //     url : '/get-city-plant-datas', // La ressource ciblée
+        //     type : 'GET',
+        //     dataType : "json",
+        //     async: false
+        // }).responseJSON;
+        // console.log(cityPlantDatas)
 
-        const trainingData = [];
+        // const trainingData = [];
 
-        for (let element in cityPlantDatas) {
-            const season           = cityPlantDatas[element]["season"];
-            const city             = cityPlantDatas[element]["city"];
-            const cityPopulation   = cityPlantDatas[element]["cityPopulation"];
-            const plant            = cityPlantDatas[element]["plant"];
-            const year             = cityPlantDatas[element]["year"];
-            const quantitySold     = cityPlantDatas[element]["quantitySold"];
-            const quantityProduced = cityPlantDatas[element]["quantityProduced"];
+        // for (let element in cityPlantDatas) {
+        //     const season           = cityPlantDatas[element]["season"];
+        //     const city             = cityPlantDatas[element]["city"];
+        //     const cityPopulation   = cityPlantDatas[element]["cityPopulation"];
+        //     const plant            = cityPlantDatas[element]["plant"];
+        //     const year             = cityPlantDatas[element]["year"];
+        //     const quantitySold     = cityPlantDatas[element]["quantitySold"];
+        //     const quantityProduced = cityPlantDatas[element]["quantityProduced"];
             
-            trainingData.push({
-                input: { 
-                    [season]: 1,
-                    [city]: 1,
-                    [cityPopulation]: 1,
-                    [plant]: 1,
-                    [year]: 1
-                },
-                output: { [quantityProduced]: 1 }
-            });
+        //     trainingData.push({
+        //         input: { 
+        //             [season]: 1,
+        //             [city]: 1,
+        //             [cityPopulation]: 1,
+        //             [plant]: 1,
+        //             [year]: 1
+        //         },
+        //         output: { [quantityProduced]: 1 }
+        //     });
+        // }
+
+        // const net   = new brain.NeuralNetwork({ hiddenLayers: [3] });
+        // const stats = net.train(trainingData);
+
+        // console.log(stats);
+
+        // let outputs         = net.run({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
+        // let numeratorSize   = 0;
+        // let denominatorSize = 0;
+
+        // for (const [key, value] of Object.entries(outputs)) {
+        //     numeratorSize    += key * value;
+        //     denominatorSize  += value;
+        // }
+
+        // console.log(outputs);
+
+        // let average = numeratorSize / denominatorSize;
+        
+        // console.log(average)
+        // console.log(denominatorSize)
+
+        /**
+        * Prépare un neural network 
+        */
+        let getNeuralNetwork = () => {
+            net = new brain.NeuralNetwork({ hiddenLayers: [3,3] });
+            let stats = net.train(getTrainingDatas());
+            console.log(stats)
+
+            return net;
+        };
+
+        function getTrainingDatas() {
+            cityPlantDatas = getCityPlantFromApi();
+            const trainingData = [];
+            for (let element in cityPlantDatas) {
+                const season            = cityPlantDatas[element]["season"];
+                const city              = cityPlantDatas[element]["city"];
+                const cityPopulation    = cityPlantDatas[element]["cityPopulation"];
+                const plant             = cityPlantDatas[element]["plant"];
+                const year              = cityPlantDatas[element]["year"];
+                const quantitySold      = cityPlantDatas[element]["quantitySold"];
+                const quantityProduced  = cityPlantDatas[element]["quantityProduced"];
+                const climatCity        = cityPlantDatas[element]["climatCity"];
+                
+                let climatPlant;
+                let climatPlantFlag = false
+                if (cityPlantDatas[element]["climatPlant"].includes(climatCity)) {
+                    climatPlant = climatCity;
+                    climatPlantFlag = true
+                }
+                if (climatPlantFlag === true) {
+                    trainingData.push({
+                        input: { 
+                            [season]: 1,
+                            [city]: 1,
+                            [cityPopulation]: 1,
+                            [plant]: 1,
+                            [year]: 1,
+                            [quantityProduced]: 1,
+                            [climatPlant]: 1,
+                            [climatCity]: 1,
+                        },
+                        output: { [quantitySold]: 1 }
+                    });
+                } else {
+                    trainingData.push({
+                        input: { 
+                            [season]: 1,
+                            [city]: 1,
+                            [cityPopulation]: 1,
+                            [plant]: 1,
+                            [year]: 1,
+                            [quantityProduced]: 1,
+                            [climatCity]: 1,
+                        },
+                        output: { [quantitySold]: 1 }
+                    });
+                }
+            }
+            return trainingData;
         }
 
-        const net   = new brain.NeuralNetwork({ hiddenLayers: [3] });
-        const stats = net.train(trainingData);
-
-        console.log(stats);
-
-        let outputs         = net.run({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
-        let numeratorSize   = 0;
-        let denominatorSize = 0;
-
-        for (const [key, value] of Object.entries(outputs)) {
-            numeratorSize    += key * value;
-            denominatorSize  += value;
+        function getCityPlantFromApi() {
+            return $.ajax({
+                url : '/get-city-plant-datas', // La ressource ciblée
+                type : 'GET',
+                dataType : "json",
+                async: false
+            }).responseJSON;
         }
 
-        let average = numeratorSize / denominatorSize;
+        function newEstimation(params) {
+            const net = getNeuralNetwork()
+            let outputs         = net.run(params) // on espère ce genre de params ({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
+            let numeratorSize   = 0;
+            let denominatorSize = 0; 
+            for (const [key, value] of Object.entries(outputs)) {
+                numeratorSize    += key * value;
+                denominatorSize  += value;
+            }
+            console.log(outputs);
+            let average = numeratorSize / denominatorSize;
+            return average;
+        }
 
-        console.log(average)
+        $(document).ready(function () {
+            $("#spinnerIa").hide();
+
+            $("#generateProductionBtn").click(function () {
+                $("#spinnerIa").show();
+                let spinner = '<img src="/img/spinner_ia.gif" style="width: 128px" alt="" id="imgSpinnerIa">'
+                $("#contentPrevision").html(spinner);
+            })
+
+            $('#generateProductionBtn').on('click', function(e) {
+                e.preventDefault();
+                $("#spinnerIa").show();
+                let cityNameValue  = $("#cityInput").val();
+                let plantNameValue = $("#plantInput").val();
+                let yearValue      = $("#yearInput").val();
+
+                let cityPopulationValue = $("#" + cityNameValue + "-population").val();
+                let cityClimatValue     = $("#" + cityNameValue + "-climat").val();
+                // let plantClimatValue    = $("#" + plantNameValue + "-climatp").val();
+                // on espère ce genre de params ({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
+
+
+                let paramsObject = {
+                    [cityNameValue]: 1,
+                    [plantNameValue]: 1,
+                    [yearValue]: 1,
+                    [cityPopulationValue]: 1,
+                    [cityClimatValue]: 1
+                }
+
+                
+
+                console.log(paramsObject);
+
+                // console.log(newEstimation(paramsObject));
+                const trainingData = [];
+                const cityPlantDatas = getCityPlantFromApi();
+
+                for (let element in cityPlantDatas) {
+                    const season            = cityPlantDatas[element]["season"];
+                    const city              = cityPlantDatas[element]["city"];
+                    const cityPopulation    = cityPlantDatas[element]["cityPopulation"];
+                    const plant             = cityPlantDatas[element]["plant"];
+                    const year              = cityPlantDatas[element]["year"];
+                    const quantitySold      = cityPlantDatas[element]["quantitySold"];
+                    const quantityProduced  = cityPlantDatas[element]["quantityProduced"];
+                    const climatCity        = cityPlantDatas[element]["climatCity"];
+                    
+                    let climatPlant;
+                    let climatPlantFlag = false
+                    if (cityPlantDatas[element]["climatPlant"].includes(climatCity)) {
+                        climatPlant = climatCity;
+                        climatPlantFlag = true
+                    }
+                    if (climatPlantFlag === true) {
+                        trainingData.push({
+                            input: { 
+                                [season]: 1,
+                                [city]: 1,
+                                [cityPopulation]: 1,
+                                [plant]: 1,
+                                [year]: 1,
+                                [quantityProduced]: 1,
+                                [climatPlant]: 1,
+                                [climatCity]: 1,
+                            },
+                            output: { [quantitySold]: 1 }
+                        });
+                    } else {
+                        trainingData.push({
+                            input: { 
+                                [season]: 1,
+                                [city]: 1,
+                                [cityPopulation]: 1,
+                                [plant]: 1,
+                                [year]: 1,
+                                [quantityProduced]: 1,
+                                [climatCity]: 1,
+                            },
+                            output: { [quantitySold]: 1 }
+                        });
+                    }
+                }
+
+                setTimeout(function(){ 
+                    const net   = new brain.NeuralNetwork({ hiddenLayers: [3] });
+                    const stats = net.train(trainingData);
+                    console.log(stats);
+
+                    let seasons = [
+                        "été",
+                        "automne",
+                        "hiver",
+                        "printemps"
+                    ]
+
+                    
+
+                    let counter = 0;
+                    seasons.map((season) => {
+                        counter == 0 ? $("#contentPrevision").html() : null;
+                        console.log(season)
+                        paramsObject[season] = 1
+                        console.log(paramsObject);
+
+                        let outputs         = net.run(paramsObject);
+                        let numeratorSize   = 0;
+                        let denominatorSize = 0;
+                        paramsObject[season] = 0;
+
+                        for (const [key, value] of Object.entries(outputs)) {
+                            numeratorSize    += key * value;
+                            denominatorSize  += value;
+                        }
+
+                        console.log(outputs);
+
+                        let average = (numeratorSize / denominatorSize) / 100000;
+                        let averageHtml = '<div class="bg-dark text-white text-center p-3 font-weight-bold rounded mb-2 shadow"> Prévisions en kilo pour la saison ' + season + ' : ' + average + '</div>'
+
+                        $("#contentPrevision").append(averageHtml);
+                        console.log(average)
+                        counter++;
+                    })
+                }, 1000);
+                
+
+
+
+                        // console.log(cityNameValue);
+                        // console.log(cityPopulationValue);
+                        // console.log(cityClimatValue);
+                        // console.log(plantNameValue);
+                        // console.log(plantClimatValue);
+                        // console.log(yearValue);
+            })
+        });
 
     </script>
 {% endblock %}
