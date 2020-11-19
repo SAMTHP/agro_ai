@@ -218,11 +218,9 @@ class AppFixtures extends Fixture
     }
 
     private function getSeasonImpact(string $season): float
-    {
+    {          
         $seasonModifier = 1;
         $seasonModifier = $season === "hiver"? 1 : 2;
-        $seasonModifier = $season === "printemps"? 2.5 : 1;
-        $seasonModifier = $season === "automne"? 1.8 : 1;
         $seasonModifier = $season === "été"? 3 : $seasonModifier;
         return $seasonModifier;
     }
