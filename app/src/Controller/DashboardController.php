@@ -18,7 +18,6 @@ class DashboardController extends AbstractController
     /**
      * @Route("/dashboard", name="dashboard")
      * 
-     * 
      * @return Response
      */
     public function index( PlantRepository $plantRepository, CityRepository $cityRepository, CityPlantRepository $cityPlantRepository, SerializerInterface $serializerInterface): Response
