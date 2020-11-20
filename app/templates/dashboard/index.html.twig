@@ -201,7 +201,7 @@
                     <div class="col-md-12">
                         <div class="card ">
                             <div class="card-header ">
-                                <h5 class="card-title">Productions patates en occitanie - 2020</h5>
+                                <h5 class="card-title">Productions : Patates en Occitanie - 2020</h5>
                                 <p class="card-category">24 Heures performance</p>
                             </div>
                             <div class="card-body ">
@@ -267,9 +267,11 @@
                                     <div class="col-lg-6" style="diplay: none" id="spinnerIa">
                                         <div class="d-flex justify-content-center">
                                             <div class="card border-0 shadow col-12" >
-                                                <h6 class="waiting-msg text-muted text-center mt-4">Prévisions en cours</h6>
+                                                <h6 class="initialization-msg text-muted text-center mt-4">Initialisation de l'IA en cours</h6>
                                                 <div class="d-flex justify-content-center mb-3">
-                                                    <div id="contentPrevision"></div>
+                                                    <div id="contentPrevision">
+                                                        <img src="/img/spinner_ia.gif" style="width: 128px" alt="" id="imgSpinnerIa">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -442,42 +444,14 @@
             return average;
         }
 
+        const trainingData = [];
+        const net = new brain.NeuralNetwork({ hiddenLayers: [3] });
+
         $(document).ready(function () {
-            $("#spinnerIa").hide();
+            $("#spinnerIa").show();
+            $("#generateProductionBtn").prop("disabled", true);
 
-            $("#generateProductionBtn").click(function () {
-                $("#spinnerIa").show();
-                let spinner = '<img src="/img/spinner_ia.gif" style="width: 128px" alt="" id="imgSpinnerIa">'
-                $("#contentPrevision").html(spinner);
-            })
-
-            $('#generateProductionBtn').on('click', function(e) {
-                e.preventDefault();
-                $("#spinnerIa").show();
-                let cityNameValue  = $("#cityInput").val();
-                let plantNameValue = $("#plantInput").val();
-                let yearValue      = $("#yearInput").val();
-
-                let cityPopulationValue = $("#" + cityNameValue + "-population").val();
-                let cityClimatValue     = $("#" + cityNameValue + "-climat").val();
-                // let plantClimatValue    = $("#" + plantNameValue + "-climatp").val();
-                // on espère ce genre de params ({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
-
-
-                let paramsObject = {
-                    [cityNameValue]: 1,
-                    [plantNameValue]: 1,
-                    [yearValue]: 1,
-                    [cityPopulationValue]: 1,
-                    [cityClimatValue]: 1
-                }
-
-                
-
-                console.log(paramsObject);
-
-                // console.log(newEstimation(paramsObject));
-                const trainingData = [];
+            setTimeout(function(){ 
                 const cityPlantDatas = getCityPlantFromApi();
 
                 for (let element in cityPlantDatas) {
@@ -526,64 +500,104 @@
                     }
                 }
 
+                const stats = net.train(trainingData);    
+                console.log(stats);
+                let InitializationEndMessage = 'Initialization terminée'
+            
+                $(".initialization-msg").text(InitializationEndMessage);
+                $("#contentPrevision").html("");  
+                $("#generateProductionBtn").prop("disabled", false);
+            }, 1000);
+
+              
+
+            $("#generateProductionBtn").click(function () {
                 
-                setTimeout(function(){ 
-                    const net   = new brain.NeuralNetwork({ hiddenLayers: [3] });
-                    const stats = net.train(trainingData);
-                    console.log(stats);
+            })
 
-                    let seasons = [
-                        "été",
-                        "automne",
-                        "hiver",
-                        "printemps"
-                    ]
+            
+            
+            $('#generateProductionBtn').on('click', function(e) {
+                e.preventDefault();
+                
+                let cityNameValue  = $("#cityInput").val();
+                let plantNameValue = $("#plantInput").val();
+                let yearValue      = $("#yearInput").val();
 
-                    $("#contentPrevision").html("<hr/>")
-                    let modifier = 1;
+                let cityPopulationValue = $("#" + cityNameValue + "-population").val();
+                let cityClimatValue     = $("#" + cityNameValue + "-climat").val();
+                // let plantClimatValue    = $("#" + plantNameValue + "-climatp").val();
+                // on espère ce genre de params ({ 2020: 1, "Marijuana": 1, "La Couyère": 1 });
 
-                    seasons.map((season) => {
-                        console.log(season)
-                        paramsObject[season] = 1
-                        console.log(paramsObject);
 
-                        let outputs         = net.run(paramsObject);
-                        let numeratorSize   = 0;
-                        let denominatorSize = 0;
-                        paramsObject[season] = 0;
+                let paramsObject = {
+                    [cityNameValue]: 1,
+                    [plantNameValue]: 1,
+                    [yearValue]: 1,
+                    [cityPopulationValue]: 1,
+                    [cityClimatValue]: 1
+                }
 
-                        for (const [key, value] of Object.entries(outputs)) {
-                            numeratorSize    += key * value;
-                            denominatorSize  += value;
-                        }
+                
 
-                        console.log(outputs);
-                        
-                        if(season == "printemps"){
-                            modifier = 0.92;
-                        } else if (season == "automne"){
-                            modifier = 0.88;
-                        } else {
-                            modifier = 1;
-                        }
+                console.log(paramsObject);
 
-                        let average = Math.ceil( modifier * ( ( numeratorSize / denominatorSize ) / 100000 ) );
-                        let averageHtml = '<div class="bg-dark text-white text-center p-3 font-weight-bold rounded mb-2 shadow"> Prévisions en kilos pour la saison ' + season + ' : ' + average + ' kgs</div>'
+                // console.log(newEstimation(paramsObject));
+                
+                
+
+                let seasons = [
+                    "été",
+                    "automne",
+                    "hiver",
+                    "printemps"
+                ]
+
+                $("#contentPrevision").html("<hr/>")
+                let modifier = 1;
+
+                seasons.map((season) => {
+                    console.log(season)
+                    paramsObject[season] = 1
+                    console.log(paramsObject);
+
+                    let outputs         = net.run(paramsObject);
+                    let numeratorSize   = 0;
+                    let denominatorSize = 0;
+                    paramsObject[season] = 0;
+
+                    for (const [key, value] of Object.entries(outputs)) {
+                        numeratorSize    += key * value;
+                        denominatorSize  += value;
+                    }
+
+                    let yearModifier;
+
+                    let yearValueModifier = parseInt(yearValue.substring(0,4));
+
+                    yearValueModifier == 2021 ? yearModifier = 1.1 : 1;
+                    yearValueModifier == 2022 ? yearModifier = 1.15 : 1;
+                    yearValueModifier == 2023 ? yearModifier = 1.20 : 1;
+
+                    console.log(outputs);
+                    
+                    if(season == "printemps"){
+                        modifier = 0.92;
+                    } else if (season == "automne"){
+                        modifier = 0.88;
+                    } else {
                         modifier = 1;
-                        $("#contentPrevision").append(averageHtml);
-                        console.log(average)
-                    })
-                }, 1000);
-                
+                    }
 
+                    console.log(typeof yearModifier)
+                    console.log(  yearModifier)
 
-
-                        // console.log(cityNameValue);
-                        // console.log(cityPopulationValue);
-                        // console.log(cityClimatValue);
-                        // console.log(plantNameValue);
-                        // console.log(plantClimatValue);
-                        // console.log(yearValue);
+                    let average = Math.ceil(  ( yearModifier * modifier * ( ( numeratorSize / denominatorSize ) / 100000 ))  );
+                    let averageHtml = '<div class="bg-dark text-white text-center p-3 font-weight-bold rounded mb-2 shadow"> Prévisions en kilos pour la saison ' + season + ' : ' + average + ' kgs</div>'
+                    modifier = 1;
+                    $("#contentPrevision").append(averageHtml);
+                    console.log(average)
+                })
             })
         });
 
